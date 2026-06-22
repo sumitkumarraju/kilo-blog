@@ -1,0 +1,84 @@
+spring:
+  application:
+    name: kilo-blog-backend
+  profiles:
+    active: default
+  datasource:
+    url: jdbc:postgresql://localhost:5432/kiloblog
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USER:kilo}
+    password: ${DB_PASSWORD:kilo}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+    open-in-view: false
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    date-format: yyyy-MM-dd'T'HH:mm:ss.SSSXXX
+    default-property-inclusion: non_null
+
+server:
+  port: 8080
+  error:
+    include-message: always
+
+kilo:
+  jwt:
+    secret: ZmFrZS1zZWNyZXQta2V5LWZvci1raWxvLWJsb2ctbXVzdC1iZS1sb25nLWVub3VnaC1mb3ItaHM0NTYtYWxnb3JpdGhtLTEyMzQ1Njc4OTA=
+    expiration-ms: 86400000
+  cors:
+    allowed-origins: http://localhost:5173,http://localhost:3000
+  seed:
+    enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    org.springframework.security: INFO
+    com.kilo.blog: INFO
+
+---
+# Zero-setup fallback. Runs an in-memory H2 with PostgreSQL compatibility mode.
+# Use only for quick demos — data is wiped on every restart.
+# Activate with: SPRING_PROFILES_ACTIVE=h2 mvn spring-boot:run
+spring:
+  config:
+    activate:
+      on-profile: h2
+  datasource:
+    url: jdbc:h2:mem:kiloblog;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+---
+# Production-grade Postgres profile. Identical to default but disables seeder.
+spring:
+  config:
+    activate:
+      on-profile: prod
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+kilo:
+  seed:
+    enabled: false

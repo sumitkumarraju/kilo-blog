@@ -1,0 +1,56 @@
+package com.kilo.blog.security;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import javax.crypto.SecretKey;
+import java.util.Date;
+
+@Component
+public class JwtTokenProvider {
+
+    private final SecretKey key;
+    private final long expirationMs;
+
+    public JwtTokenProvider(
+            @Value("${kilo.jwt.secret}") String secret,
+            @Value("${kilo.jwt.expiration-ms}") long expirationMs
+    ) {
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
+        this.key = Keys.hmacShaKeyFor(keyBytes);
+        this.expirationMs = expirationMs;
+    }
+
+    public String generateToken(String subject, String role) {
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + expirationMs);
+        return Jwts.builder()
+                .subject(subject)
+                .claim("role", role)
+                .issuedAt(now)
+                .expiration(exp)
+                .signWith(key)
+                .compact();
+    }
+
+    public Claims parse(String token) {
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    public boolean isValid(String token) {
+        try {
+            parse(token);
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+}

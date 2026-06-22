@@ -1,0 +1,7 @@
+# Vercel deploys ONLY the React frontend.
+# The Spring Boot backend must be deployed separately (Render / Railway / Fly).
+# Set VITE_API_URL in the Vercel project settings to your deployed backend URL.
+
+cd frontend
+npm install
+npm run build
