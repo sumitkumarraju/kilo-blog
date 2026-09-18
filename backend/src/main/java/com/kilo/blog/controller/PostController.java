@@ -1,7 +1,7 @@
 package com.kilo.blog.controller;
 
 import com.kilo.blog.dto.request.CreatePostRequest;
-import com.kilo.blog.dto.request.ModerateRequest;
+import com.kilo.blog.dto.request.RejectPostRequest;
 import com.kilo.blog.dto.request.UpdatePostRequest;
 import com.kilo.blog.dto.response.PageResponse;
 import com.kilo.blog.dto.response.PostResponse;
@@ -87,7 +87,7 @@ public class PostController {
     }
 
     @PostMapping("/{id}/reject")
-    public PostResponse reject(@PathVariable UUID id, @RequestBody(required = false) ModerateRequest req) {
+    public PostResponse reject(@PathVariable UUID id, @RequestBody(required = false) RejectPostRequest req) {
         return postService.reject(id, req == null ? null : req.reason());
     }
 

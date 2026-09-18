@@ -101,6 +101,7 @@ export interface CreatePostInput {
 
 export interface UpdatePostInput {
   title?: string;
+  slug?: string;
   excerpt?: string;
   content?: string;
   coverImageUrl?: string;

@@ -3,6 +3,7 @@ package com.kilo.blog.service;
 import com.kilo.blog.domain.Comment;
 import com.kilo.blog.domain.CommentStatus;
 import com.kilo.blog.domain.Post;
+import com.kilo.blog.domain.PostStatus;
 import com.kilo.blog.domain.User;
 import com.kilo.blog.dto.request.CreateCommentRequest;
 import com.kilo.blog.dto.request.ModerateRequest;
@@ -37,6 +38,9 @@ public class CommentService {
     public CommentResponse create(String postSlug, CreateCommentRequest req, String userEmailOrNull) {
         Post post = postRepository.findBySlug(postSlug)
                 .orElseThrow(() -> new NotFoundException("Post not found"));
+        if (post.getStatus() != PostStatus.PUBLISHED) {
+            throw new BadRequestException("Comments are only allowed on published posts");
+        }
 
         Comment.CommentBuilder builder = Comment.builder()
                 .post(post)
@@ -44,7 +48,7 @@ public class CommentService {
                 .status(CommentStatus.PENDING);
 
         if (userEmailOrNull != null) {
-            User u = userRepository.findByEmail(userEmailOrNull)
+            User u = userRepository.findByEmailIgnoreCase(userEmailOrNull)
                     .orElseThrow(() -> new NotFoundException("User not found"));
             builder.author(u);
         } else {
@@ -92,7 +96,7 @@ public class CommentService {
     public CommentResponse moderate(UUID id, ModerateRequest req, String moderatorEmail) {
         Comment c = commentRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Comment not found"));
-        User moderator = userRepository.findByEmail(moderatorEmail)
+        User moderator = userRepository.findByEmailIgnoreCase(moderatorEmail)
                 .orElseThrow(() -> new NotFoundException("Moderator not found"));
         c.setStatus(req.status());
         c.setModeratedAt(Instant.now());

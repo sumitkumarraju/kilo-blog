@@ -111,6 +111,7 @@ export function EditorPage() {
       } else {
         saved = await api.posts.update(post.slug, {
           title,
+          slug: slug || undefined,
           excerpt,
           content,
           coverImageUrl: coverImageUrl || undefined,

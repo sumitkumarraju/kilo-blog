@@ -1,6 +1,7 @@
 package com.kilo.blog.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.Instant;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -39,7 +41,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({BadCredentialsException.class, AuthenticationException.class})
     public ResponseEntity<ErrorResponse> handleAuth(AuthenticationException ex, HttpServletRequest req) {
-        return build(HttpStatus.UNAUTHORIZED, ex.getMessage() == null ? "Unauthorized" : ex.getMessage(), req);
+        return build(HttpStatus.UNAUTHORIZED, "Invalid credentials", req);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -57,7 +59,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAll(Exception ex, HttpServletRequest req) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage() == null ? "Internal error" : ex.getMessage(), req);
+        log.error("Unhandled error on {}", req.getRequestURI(), ex);
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Internal error", req);
     }
 
     private String formatFieldError(FieldError fe) {

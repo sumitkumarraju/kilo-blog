@@ -42,9 +42,10 @@ public class PostService {
     private final SlugService slugService;
     private final ReadingTimeCalculator readingTimeCalculator;
 
+    @PreAuthorize("hasAnyRole('AUTHOR','EDITOR','ADMIN')")
     @Transactional
     public PostResponse create(CreatePostRequest req, String authorEmail) {
-        User author = userRepository.findByEmail(authorEmail)
+        User author = userRepository.findByEmailIgnoreCase(authorEmail)
                 .orElseThrow(() -> new NotFoundException("Author not found"));
 
         Post post = Post.builder()
@@ -71,6 +72,13 @@ public class PostService {
 
         if (req.title() != null && !req.title().isBlank()) {
             post.setTitle(req.title());
+        }
+        if (req.slug() != null && !req.slug().isBlank()) {
+            String nextSlug = slugService.generate(req.slug());
+            if (!nextSlug.equals(post.getSlug()) && postRepository.existsBySlugAndIdNot(nextSlug, post.getId())) {
+                throw new BadRequestException("Slug already in use");
+            }
+            post.setSlug(nextSlug);
         }
         if (req.excerpt() != null) post.setExcerpt(req.excerpt());
         if (req.content() != null && !req.content().isBlank()) {
@@ -167,7 +175,7 @@ public class PostService {
             if (email == null) {
                 throw new NotFoundException("Post not found");
             }
-            User u = userRepository.findByEmail(email).orElse(null);
+            User u = userRepository.findByEmailIgnoreCase(email).orElse(null);
             boolean isAuthor = u != null && post.getAuthor().getId().equals(u.getId());
             boolean isStaff = u != null && isEditorOrAdmin(u);
             if (!isAuthor && !isStaff) {
@@ -209,7 +217,7 @@ public class PostService {
             if (email == null) {
                 throw new NotFoundException("Post not found");
             }
-            User u = userRepository.findByEmail(email).orElse(null);
+            User u = userRepository.findByEmailIgnoreCase(email).orElse(null);
             boolean isAuthor = u != null && post.getAuthor().getId().equals(u.getId());
             boolean isStaff = u != null && isEditorOrAdmin(u);
             if (!isAuthor && !isStaff) {
@@ -254,7 +262,7 @@ public class PostService {
     }
 
     private User requireUser(String email) {
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new NotFoundException("User not found"));
     }
 

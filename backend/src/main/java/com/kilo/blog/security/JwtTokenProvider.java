@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
@@ -20,8 +21,7 @@ public class JwtTokenProvider {
             @Value("${kilo.jwt.secret}") String secret,
             @Value("${kilo.jwt.expiration-ms}") long expirationMs
     ) {
-        byte[] keyBytes = Decoders.BASE64.decode(secret);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
+        this.key = Keys.hmacShaKeyFor(decodeSecret(secret));
         this.expirationMs = expirationMs;
     }
 
@@ -52,5 +52,21 @@ public class JwtTokenProvider {
         } catch (Exception ex) {
             return false;
         }
+    }
+
+    private static byte[] decodeSecret(String secret) {
+        try {
+            byte[] decoded = Decoders.BASE64.decode(secret);
+            if (decoded.length >= 32) {
+                return decoded;
+            }
+        } catch (Exception ignored) {
+            // Fall through to raw bytes for non-base64 secrets.
+        }
+        byte[] raw = secret.getBytes(StandardCharsets.UTF_8);
+        if (raw.length < 32) {
+            throw new IllegalStateException("kilo.jwt.secret must be at least 256 bits (32 bytes)");
+        }
+        return raw;
     }
 }

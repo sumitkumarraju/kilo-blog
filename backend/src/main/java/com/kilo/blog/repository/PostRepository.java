@@ -18,6 +18,8 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     boolean existsBySlug(String slug);
 
+    boolean existsBySlugAndIdNot(String slug, UUID id);
+
     Page<Post> findByStatusOrderByPublishedAtDesc(PostStatus status, Pageable pageable);
 
     Page<Post> findByAuthorId(UUID authorId, Pageable pageable);
@@ -25,11 +27,14 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     Page<Post> findByAuthorIdAndStatus(UUID authorId, PostStatus status, Pageable pageable);
 
     @Query("""
-            select distinct p from Post p
-            left join p.tags t
+            select p from Post p
             where p.status = :status
-              and (:q is null or lower(p.title) like lower(concat('%', cast(:q as string), '%')))
-              and (:tagSlug is null or t.slug = cast(:tagSlug as string))
+              and (:q is null or lower(p.title) like lower(concat('%', cast(:q as string), '%'))
+                   or lower(coalesce(p.excerpt, '')) like lower(concat('%', cast(:q as string), '%'))
+                   or lower(p.content) like lower(concat('%', cast(:q as string), '%')))
+              and (:tagSlug is null or exists (
+                    select 1 from p.tags t where t.slug = :tagSlug
+                  ))
             """)
     Page<Post> searchPublished(@Param("status") PostStatus status,
                                @Param("q") String q,
@@ -40,7 +45,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     java.util.List<Post> findTop4ByStatusOrderByViewCountDesc(PostStatus status);
 
-    @Modifying
+    @Modifying(flushAutomatically = true)
     @Query("update Post p set p.viewCount = p.viewCount + 1 where p.id = :id")
     void incrementViewCount(@Param("id") UUID id);
 }

@@ -27,11 +27,12 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest req) {
-        if (userRepository.existsByEmail(req.email())) {
+        String email = req.email().toLowerCase().trim();
+        if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new BadRequestException("Email already in use");
         }
         User user = User.builder()
-                .email(req.email().toLowerCase())
+                .email(email)
                 .passwordHash(passwordEncoder.encode(req.password()))
                 .displayName(req.displayName())
                 .role(Role.AUTHOR)
@@ -43,10 +44,11 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest req) {
+        String email = req.email().toLowerCase().trim();
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(req.email().toLowerCase(), req.password())
+                new UsernamePasswordAuthenticationToken(email, req.password())
         );
-        User user = userRepository.findByEmail(req.email().toLowerCase())
+        User user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new BadRequestException("Invalid credentials"));
         String token = tokenProvider.generateToken(user.getEmail(), user.getRole().name());
         return new AuthResponse(token, UserMapper.toResponse(user));
