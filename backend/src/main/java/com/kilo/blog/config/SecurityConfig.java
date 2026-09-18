@@ -1,6 +1,8 @@
 package com.kilo.blog.config;
 
 import com.kilo.blog.security.CustomUserDetailsService;
+import com.kilo.blog.security.JsonAccessDeniedHandler;
+import com.kilo.blog.security.JsonAuthenticationEntryPoint;
 import com.kilo.blog.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +28,8 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
     private final CorsConfigurationSource corsConfigurationSource;
+    private final JsonAuthenticationEntryPoint authenticationEntryPoint;
+    private final JsonAccessDeniedHandler accessDeniedHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -51,9 +55,14 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
+                )
                 .authorizeHttpRequests(reg -> reg
+                        .requestMatchers("/", "/health", "/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/*/comments").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/featured", "/api/posts/*/comments").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/tags", "/api/tags/popular", "/api/tags/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/posts/*/comments").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/posts/*").permitAll()
@@ -62,7 +71,7 @@ public class SecurityConfig {
                             .hasAnyRole("EDITOR", "ADMIN")
                         .anyRequest().authenticated()
                 )
-                .headers(h -> h.frameOptions(f -> f.disable()))
+                .headers(h -> h.frameOptions(f -> f.sameOrigin()))
                 .authenticationProvider(authenticationProvider(passwordEncoder()))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

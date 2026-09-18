@@ -42,6 +42,7 @@ public final class PostMapper {
                 p.getStatus(),
                 UserMapper.toResponse(p.getAuthor()),
                 tagList(p),
+                p.getCreatedAt(),
                 p.getPublishedAt(),
                 p.getUpdatedAt(),
                 p.getViewCount()

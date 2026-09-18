@@ -16,6 +16,7 @@ public record PostSummaryResponse(
         PostStatus status,
         UserResponse author,
         List<TagResponse> tags,
+        Instant createdAt,
         Instant publishedAt,
         Instant updatedAt,
         Long viewCount

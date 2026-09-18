@@ -22,7 +22,7 @@ import java.util.UUID;
 public class Post {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(nullable = false, unique = true)
@@ -34,7 +34,6 @@ public class Post {
     @Column(columnDefinition = "TEXT")
     private String excerpt;
 
-    @Lob
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 

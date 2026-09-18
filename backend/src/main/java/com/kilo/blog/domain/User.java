@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.Locale;
 import java.util.UUID;
 
 @Entity
@@ -18,7 +19,7 @@ import java.util.UUID;
 public class User {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(nullable = false, unique = true)
@@ -46,5 +47,15 @@ public class User {
     void onCreate() {
         if (createdAt == null) createdAt = Instant.now();
         if (role == null) role = Role.READER;
+        normalizeEmail();
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        normalizeEmail();
+    }
+
+    private void normalizeEmail() {
+        if (email != null) email = email.toLowerCase(Locale.ROOT).trim();
     }
 }

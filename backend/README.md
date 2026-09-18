@@ -70,8 +70,9 @@ Pass the JWT in `Authorization: Bearer <token>`. Tokens are HS256, 24h expiry, s
 
 ## Profiles
 
-- `default` (H2, create-drop, seeded) — `mvn spring-boot:run`
-- `prod` (Postgres, jdbc:postgresql://localhost:5432/kiloblog) — `mvn spring-boot:run -Dspring-boot.run.profiles=prod`
+- `h2` (default — in-memory, create-drop, seeded) — `mvn spring-boot:run`
+- `postgres` (local PostgreSQL, no seeder) — `mvn spring-boot:run -Dspring-boot.run.profiles=postgres`
+- `prod` (PostgreSQL, schema update, seeds an empty database) — `mvn spring-boot:run -Dspring-boot.run.profiles=prod`
 
 ## CORS
 

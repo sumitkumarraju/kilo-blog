@@ -1,5 +1,6 @@
 package com.kilo.blog.mapper;
 
+import com.kilo.blog.domain.PostStatus;
 import com.kilo.blog.domain.Tag;
 import com.kilo.blog.dto.response.TagResponse;
 
@@ -14,8 +15,15 @@ public final class TagMapper {
                 t.getName(),
                 t.getDescription(),
                 t.getColor(),
-                t.getPosts() == null ? 0 : t.getPosts().size()
+                publishedCount(t)
         );
+    }
+
+    private static int publishedCount(Tag t) {
+        if (t.getPosts() == null) return 0;
+        return (int) t.getPosts().stream()
+                .filter(p -> p.getStatus() == PostStatus.PUBLISHED)
+                .count();
     }
 
     public static TagResponse toResponseLight(Tag t) {
